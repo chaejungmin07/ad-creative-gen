@@ -1,9 +1,11 @@
-import anthropic
 import json
 import os
+import httpx
 from models.schemas import CreativeInput, ConceptVariant
 
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+GROQ_MODEL = "llama-3.3-70b-versatile"
 
 APPEAL_TYPES = [
     {"id": 1, "type": "price_benefit", "label": "가격/혜택 소구", "focus": "할인, 프로모션, 가성비, 혜택 강조"},
@@ -54,13 +56,23 @@ async def generate_concepts(creative_input: CreativeInput) -> list[ConceptVarian
 각 컨셉은 명확히 다른 소구점을 가져야 하며, 실제 광고에 바로 사용 가능한 수준으로 작성해주세요.
 image_prompt는 반드시 영어로 작성하고, 광고 소재에 적합한 professional, clean, eye-catching 스타일로 만들어주세요."""
 
-    message = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=4096,
-        messages=[{"role": "user", "content": prompt}],
-    )
+    async with httpx.AsyncClient(timeout=60.0) as http:
+        resp = await http.post(
+            f"{GROQ_BASE_URL}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": GROQ_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 4096,
+                "temperature": 0.7,
+            },
+        )
+        resp.raise_for_status()
 
-    content = message.content[0].text.strip()
+    content = resp.json()["choices"][0]["message"]["content"].strip()
     if content.startswith("```"):
         content = content.split("```")[1]
         if content.startswith("json"):

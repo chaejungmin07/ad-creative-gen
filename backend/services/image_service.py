@@ -1,31 +1,26 @@
-import openai
 import os
 import httpx
 import asyncio
+import urllib.parse
 from models.schemas import ConceptVariant
 
-client = openai.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Pollinations.ai - 무료, API 키 불필요, FLUX 모델
+POLLINATIONS_BASE = "https://image.pollinations.ai/prompt"
 
 
 async def generate_image(variant: ConceptVariant, session_id: str) -> str:
-    """DALL-E 3으로 이미지 생성 후 로컬 저장, URL 반환"""
-    enhanced_prompt = f"""Professional advertisement creative image for Korean market.
-{variant.image_prompt}
-Style: Clean, modern advertising photography or illustration. High-quality commercial look.
-Color scheme: {variant.color_scheme}.
-No text overlays. Suitable for digital display advertising.
-Ultra-realistic, professional commercial photography style."""
-
-    response = await client.images.generate(
-        model="dall-e-3",
-        prompt=enhanced_prompt,
-        size="1024x1024",
-        quality="standard",
-        n=1,
+    """Pollinations.ai (무료)로 이미지 생성 후 로컬 저장"""
+    prompt = (
+        f"{variant.image_prompt}. "
+        f"Professional advertisement creative, clean commercial look, "
+        f"color scheme: {variant.color_scheme}, "
+        f"no text overlay, high quality, photorealistic"
     )
+    encoded = urllib.parse.quote(prompt)
+    # seed를 variant.id 기반으로 고정해 재현성 확보
+    url = f"{POLLINATIONS_BASE}/{encoded}?width=1024&height=1024&model=flux&seed={variant.id * 7919}&nologo=true"
 
-    image_url = response.data[0].url
-    local_path = await _download_and_save(image_url, session_id, variant.id)
+    local_path = await _download_and_save(url, session_id, variant.id)
     return local_path
 
 
