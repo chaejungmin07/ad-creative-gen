@@ -1,43 +1,42 @@
-import { CreativeInput, GenerateResponse, MediaSize } from "@/types";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { CreativeInput, GenerateResponse, MediaSize, GeneratedCreative } from "@/types";
 
 export async function generateCreatives(input: CreativeInput): Promise<GenerateResponse> {
-  const res = await fetch(`${API_BASE}/api/generate`, {
+  const res = await fetch("/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "서버 오류가 발생했습니다." }));
-    throw new Error(err.detail || "소재 생성 실패");
+    const err = await res.json().catch(() => ({ error: "서버 오류가 발생했습니다." }));
+    throw new Error(err.error || "소재 생성 실패");
   }
   return res.json();
 }
 
 export async function getMediaSizes(): Promise<MediaSize[]> {
-  const res = await fetch(`${API_BASE}/api/download/sizes`);
+  const res = await fetch("/api/sizes");
   if (!res.ok) throw new Error("사이즈 목록 로드 실패");
   const data = await res.json();
   return data.sizes;
 }
 
 export async function downloadCreative(
-  sessionId: string,
-  variantId: number,
+  creative: GeneratedCreative,
   sizeName: string,
-  format: "image" | "video",
   customWidth?: number,
   customHeight?: number
 ): Promise<Blob> {
-  const res = await fetch(`${API_BASE}/api/download`, {
+  const res = await fetch("/api/download", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      session_id: sessionId,
-      variant_id: variantId,
+      variant_id: creative.variant_id,
       size_name: sizeName,
-      format,
+      image_prompt: creative.image_prompt,
+      color_scheme: creative.color_scheme,
+      headline: creative.headline,
+      subheadline: creative.subheadline,
+      cta: creative.cta,
       custom_width: customWidth,
       custom_height: customHeight,
     }),

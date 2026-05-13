@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { GeneratedCreative, MediaSize } from "@/types";
-import { X, Download, Loader2, Monitor, Smartphone, Image } from "lucide-react";
+import { X, Download, Loader2 } from "lucide-react";
 import { getMediaSizes, downloadCreative, triggerDownload } from "@/lib/api";
 
 interface Props {
   creative: GeneratedCreative;
-  sessionId: string;
   onClose: () => void;
 }
 
@@ -22,10 +21,10 @@ const PLATFORM_ICONS: Record<string, string> = {
   Custom: "✏️",
 };
 
-export default function SizeDownloadModal({ creative, sessionId, onClose }: Props) {
+export default function SizeDownloadModal({ creative, onClose }: Props) {
   const [sizes, setSizes] = useState<MediaSize[]>([]);
   const [selectedSize, setSelectedSize] = useState<string>("insta_feed");
-  const [format, setFormat] = useState<"image" | "video">("image");
+  const format = "image";
   const [customW, setCustomW] = useState(1080);
   const [customH, setCustomH] = useState(1080);
   const [downloading, setDownloading] = useState(false);
@@ -48,15 +47,12 @@ export default function SizeDownloadModal({ creative, sessionId, onClose }: Prop
     setDone(false);
     try {
       const blob = await downloadCreative(
-        sessionId,
-        creative.variant_id,
+        creative,
         selectedSize,
-        format,
         selectedSize === "custom" ? customW : undefined,
         selectedSize === "custom" ? customH : undefined
       );
-      const ext = format === "video" ? (blob.type.includes("gif") ? "gif" : "mp4") : "png";
-      triggerDownload(blob, `creative_${creative.appeal_type}_${selectedSize}.${ext}`);
+      triggerDownload(blob, `creative_${creative.appeal_type}_${selectedSize}.png`);
       setDone(true);
       setTimeout(() => setDone(false), 2000);
     } catch (e) {
@@ -81,35 +77,6 @@ export default function SizeDownloadModal({ creative, sessionId, onClose }: Prop
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Format selection */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">소재 형태</label>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setFormat("image")}
-                className={`flex-1 py-3 rounded-xl border-2 text-sm font-semibold transition flex items-center justify-center gap-2 ${
-                  format === "image"
-                    ? "border-indigo-500 bg-indigo-50 text-indigo-700"
-                    : "border-gray-200 text-gray-600 hover:border-gray-300"
-                }`}
-              >
-                <Image className="w-4 h-4" />
-                이미지 (PNG)
-              </button>
-              <button
-                onClick={() => setFormat("video")}
-                className={`flex-1 py-3 rounded-xl border-2 text-sm font-semibold transition flex items-center justify-center gap-2 ${
-                  format === "video"
-                    ? "border-indigo-500 bg-indigo-50 text-indigo-700"
-                    : "border-gray-200 text-gray-600 hover:border-gray-300"
-                }`}
-              >
-                <Monitor className="w-4 h-4" />
-                영상 (MP4/GIF)
-              </button>
-            </div>
-          </div>
-
           {/* Size selection */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-3">매체/사이즈 선택</label>
@@ -208,14 +175,14 @@ export default function SizeDownloadModal({ creative, sessionId, onClose }: Prop
             {downloading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                {format === "video" ? "영상 변환 중... (30초-2분 소요)" : "이미지 처리 중..."}
+                이미지 처리 중...
               </>
             ) : done ? (
               <>✅ 다운로드 완료!</>
             ) : (
               <>
                 <Download className="w-5 h-5" />
-                {format === "image" ? "이미지 다운로드" : "영상 다운로드"}
+                이미지 다운로드
               </>
             )}
           </button>

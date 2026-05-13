@@ -158,7 +158,6 @@ export default function Home() {
                 <CreativeCard
                   key={creative.variant_id}
                   creative={creative}
-                  sessionId={sessionId}
                   index={index}
                 />
               ))}

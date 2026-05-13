@@ -2,16 +2,15 @@
 
 import { useState } from "react";
 import { GeneratedCreative, APPEAL_TYPE_LABELS } from "@/types";
-import { Download, Play, Eye, Check } from "lucide-react";
+import { Download, Eye } from "lucide-react";
 import SizeDownloadModal from "./SizeDownloadModal";
 
 interface Props {
   creative: GeneratedCreative;
-  sessionId: string;
   index: number;
 }
 
-export default function CreativeCard({ creative, sessionId, index }: Props) {
+export default function CreativeCard({ creative, index }: Props) {
   const [showModal, setShowModal] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -108,7 +107,6 @@ export default function CreativeCard({ creative, sessionId, index }: Props) {
       {showModal && (
         <SizeDownloadModal
           creative={creative}
-          sessionId={sessionId}
           onClose={() => setShowModal(false)}
         />
       )}

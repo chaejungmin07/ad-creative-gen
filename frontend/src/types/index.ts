@@ -20,6 +20,7 @@ export interface GeneratedCreative {
   thumbnail_url: string | null;
   description: string;
   color_scheme: string;
+  image_prompt: string;
 }
 
 export interface GenerateResponse {
